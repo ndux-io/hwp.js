@@ -20,6 +20,7 @@ import { Control } from '../models/controls'
 import CommonControl from '../models/controls/common'
 import ShapeControl from '../models/controls/shapes/shape'
 import TableControl, { TableColumnOption } from '../models/controls/table'
+import HeaderControl from '../models/controls/header'
 import Section from '../models/section'
 import Paragraph from '../models/paragraph'
 import ParagraphList from '../models/paragraphList'
@@ -29,7 +30,7 @@ import LineSegment from '../models/lineSegment'
 import HWPRecord from '../models/record'
 import ByteReader from '../utils/byteReader'
 import RecordReader from '../utils/recordReader'
-import { isTable, isShape } from '../utils/controlUtil'
+import { isTable, isShape, isHeader } from '../utils/controlUtil'
 import parseRecord from './parseRecord'
 import { PictureControl } from '../models/controls/shapes'
 import { getBitValue, getFlag } from '../utils/bitUtils'
@@ -204,6 +205,14 @@ class SectionParser {
       return shape
     }
 
+    if (ctrlID === OtherCtrlID.Header) {
+      const header = new HeaderControl()
+      const attribute = reader.readInt32()
+      header.id = ctrlID
+      header.range = getBitValue(attribute, 0, 1)
+      return header
+    }
+
     if (ctrlID === OtherCtrlID.Column) {
       const column = new ColumnControl()
       const attribute = reader.readUInt16()
@@ -298,6 +307,12 @@ class SectionParser {
         const options = this.visitCellListHeader(byteReader)
         const list = new ParagraphList(options, items)
         control.addRow(options.row, list)
+      }
+    }
+
+    if (record.parentTagID === SectionTagID.HWPTAG_CTRL_HEADER) {
+      if (isHeader(control)) {
+        control.content.push(new ParagraphList(null, items))
       }
     }
 
