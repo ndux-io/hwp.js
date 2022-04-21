@@ -15,7 +15,9 @@
  */
 import { Control } from '../models/controls';
 import TableControl from '../models/controls/table';
+import HeaderControl from '../models/controls/header';
 import { ShapeControls, PictureControl } from '../models/controls/shapes';
 export declare function isTable(control: Control): control is TableControl;
 export declare function isShape(control: Control): control is ShapeControls;
 export declare function isPicture(control: ShapeControls): control is PictureControl;
+export declare function isHeader(control: Control): control is HeaderControl;

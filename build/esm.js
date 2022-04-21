@@ -12421,6 +12421,28 @@ var TableControl = /*#__PURE__*/function (_CommonControl) {
   return TableControl;
 }(CommonControl);
 
+var HeaderRange;
+
+(function (HeaderRange) {
+  HeaderRange[HeaderRange["All"] = 0] = "All";
+  HeaderRange[HeaderRange["Even"] = 1] = "Even";
+  HeaderRange[HeaderRange["Odd"] = 2] = "Odd";
+})(HeaderRange || (HeaderRange = {}));
+
+var HeaderControl = function HeaderControl() {
+  _classCallCheck(this, HeaderControl);
+
+  _defineProperty(this, "id", 0);
+
+  _defineProperty(this, "width", 0);
+
+  _defineProperty(this, "height", 0);
+
+  _defineProperty(this, "range", HeaderRange.All);
+
+  _defineProperty(this, "content", []);
+};
+
 /**
  * Copyright Han Lee <hanlee.dev@gmail.com> and other contributors
  *
@@ -12715,6 +12737,9 @@ function isShape(control) {
 function isPicture(control) {
   return control.type === CommonCtrlID.Picture;
 }
+function isHeader(control) {
+  return control.id === OtherCtrlID.Header;
+}
 
 /**
  * Copyright Han Lee <hanlee.dev@gmail.com> and other contributors
@@ -12929,13 +12954,23 @@ var SectionParser = /*#__PURE__*/function () {
         return shape;
       }
 
+      if (ctrlID === OtherCtrlID.Header) {
+        var header = new HeaderControl();
+        var attribute = reader.readInt32();
+        header.id = ctrlID;
+        header.range = getBitValue(attribute, 0, 1);
+        return header;
+      }
+
       if (ctrlID === OtherCtrlID.Column) {
         var column = new ColumnControl();
-        var attribute = reader.readUInt16();
-        column.type = getBitValue(attribute, 0, 1);
-        column.count = getBitValue(attribute, 2, 9);
-        column.direction = getBitValue(attribute, 10, 11);
-        column.isSameWidth = getFlag(attribute, 12);
+
+        var _attribute = reader.readUInt16();
+
+        column.type = getBitValue(_attribute, 0, 1);
+        column.count = getBitValue(_attribute, 2, 9);
+        column.direction = getBitValue(_attribute, 10, 11);
+        column.isSameWidth = getFlag(_attribute, 12);
         column.id = ctrlID;
         column.gap = reader.readUInt16();
 
@@ -13017,6 +13052,12 @@ var SectionParser = /*#__PURE__*/function () {
           var options = this.visitCellListHeader(byteReader);
           var list = new ParagraphList(options, items);
           control.addRow(options.row, list);
+        }
+      }
+
+      if (record.parentTagID === SectionTagID.HWPTAG_CTRL_HEADER) {
+        if (isHeader(control)) {
+          control.content.push(new ParagraphList(null, items));
         }
       }
 
