@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import { CommonCtrlID } from '../constants/ctrlID'
+import { CommonCtrlID, OtherCtrlID } from '../constants/ctrlID'
 import { Control } from '../models/controls'
 import TableControl from '../models/controls/table'
+import HeaderControl from '../models/controls/header'
 import { ShapeControls, PictureControl } from '../models/controls/shapes'
 
 export function isTable(control: Control): control is TableControl {
@@ -29,4 +30,8 @@ export function isShape(control: Control): control is ShapeControls {
 
 export function isPicture(control: ShapeControls): control is PictureControl {
   return control.type === CommonCtrlID.Picture
+}
+
+export function isHeader(control: Control): control is HeaderControl {
+  return control.id === OtherCtrlID.Header
 }
