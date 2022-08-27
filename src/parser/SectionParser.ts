@@ -35,6 +35,7 @@ import parseRecord from './parseRecord'
 import { PictureControl } from '../models/controls/shapes'
 import { getBitValue, getFlag } from '../utils/bitUtils'
 import ColumnControl from '../models/controls/column'
+import EquationControl from '../models/controls/equation'
 
 class SectionParser {
   private record: HWPRecord
@@ -203,6 +204,13 @@ class SectionParser {
       shape.id = ctrlID
       this.visitCommonControl(reader, shape)
       return shape
+    }
+
+    if (ctrlID === CommonCtrlID.Equation) {
+      const equation = new EquationControl()
+      equation.id = ctrlID
+      this.visitCommonControl(reader, equation)
+      return equation
     }
 
     if (ctrlID === OtherCtrlID.Header) {
@@ -385,6 +393,44 @@ class SectionParser {
     }
   }
 
+  visitEquation(record: HWPRecord, control?: EquationControl) {
+    const reader = new ByteReader(record.payload)
+
+    if (!control) {
+      throw new Error('Expect control')
+    }
+
+    if (control.id !== CommonCtrlID.Equation) {
+      throw new Error(`Expect: ${CommonCtrlID.Table}, Recived: ${control.id}`)
+    }
+
+    const attribute = reader.readInt32()
+    control.range = getBitValue(attribute, 0)
+    control.count = reader.readUInt16()
+    const scripts: number[] = []
+    for (let i = 0; i < control.count; i += 1) {
+      scripts.push(reader.readUInt16())
+    }
+    control.scripts = scripts
+    control.size = reader.readUInt32()
+    control.color = reader.readUInt32()
+    control.baseline = reader.readUInt16()
+    if (reader.remainByte() >= control.count * 16) {
+      const versions: number[] = []
+      for (let i = 0; i < control.count; i += 1) {
+        versions.push(reader.readUInt16())
+      }
+      control.versions = versions
+    }
+    if (reader.remainByte() >= control.count * 16) {
+      const fonts: number[] = []
+      for (let i = 0; i < control.count; i += 1) {
+        fonts.push(reader.readUInt16())
+      }
+      control.fonts = fonts
+    }
+  }
+
   visit(reader: RecordReader, paragraph: Paragraph, control?: Control) {
     const record = reader.read()
 
@@ -431,6 +477,11 @@ class SectionParser {
 
       case SectionTagID.HWPTAG_PARA_LINE_SEG: {
         this.visitLineSegment(record, paragraph)
+        break
+      }
+
+      case SectionTagID.HWPTAG_EQEDIT: {
+        this.visitEquation(record, control as EquationControl)
         break
       }
 
