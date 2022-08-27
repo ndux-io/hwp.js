@@ -13,9 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type TableControl from './table';
-import type EquationControl from './equation';
-import type { ShapeControls } from './shapes';
-import type { BaseControl } from './base';
-import type ColumnControl from './column';
-export declare type Control = (BaseControl | TableControl | EquationControl | ShapeControls | ColumnControl);
+import CommonControl from './common';
+export declare enum EquationRange {
+    Word = 0,
+    Line = 1
+}
+declare class EquationControl extends CommonControl {
+    range: EquationRange;
+    count: number;
+    size: number;
+    color: number;
+    baseline: number;
+    scripts: number[];
+    versions: number[];
+    fonts: number[];
+}
+export default EquationControl;

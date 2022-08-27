@@ -23,6 +23,7 @@ import HWPRecord from '../models/record';
 import ByteReader from '../utils/byteReader';
 import RecordReader from '../utils/recordReader';
 import { PictureControl } from '../models/controls/shapes';
+import EquationControl from '../models/controls/equation';
 declare class SectionParser {
     private record;
     private result;
@@ -41,6 +42,7 @@ declare class SectionParser {
     visitShapeComponent(record: HWPRecord, paragraph: Paragraph, control: ShapeControl): void;
     visitPicture(record: HWPRecord, control: PictureControl): void;
     visitLineSegment(record: HWPRecord, paragraph: Paragraph): void;
+    visitEquation(record: HWPRecord, control?: EquationControl): void;
     visit(reader: RecordReader, paragraph: Paragraph, control?: Control): void;
     visitParagraphHeader(record: HWPRecord, content: Paragraph[], control?: Control): void;
     traverse(record: HWPRecord): void;

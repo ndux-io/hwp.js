@@ -12796,6 +12796,51 @@ var ColumnControl = function ColumnControl() {
   _defineProperty(this, "borderColor", 0);
 };
 
+var EquationRange;
+
+(function (EquationRange) {
+  EquationRange[EquationRange["Word"] = 0] = "Word";
+  EquationRange[EquationRange["Line"] = 1] = "Line";
+})(EquationRange || (EquationRange = {}));
+
+var EquationControl = /*#__PURE__*/function (_CommonControl) {
+  _inherits(EquationControl, _CommonControl);
+
+  var _super = _createSuper(EquationControl);
+
+  function EquationControl() {
+    var _this;
+
+    _classCallCheck(this, EquationControl);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _super.call.apply(_super, [this].concat(args));
+
+    _defineProperty(_assertThisInitialized(_this), "range", EquationRange.Word);
+
+    _defineProperty(_assertThisInitialized(_this), "count", 0);
+
+    _defineProperty(_assertThisInitialized(_this), "size", 0);
+
+    _defineProperty(_assertThisInitialized(_this), "color", 0);
+
+    _defineProperty(_assertThisInitialized(_this), "baseline", 0);
+
+    _defineProperty(_assertThisInitialized(_this), "scripts", []);
+
+    _defineProperty(_assertThisInitialized(_this), "versions", []);
+
+    _defineProperty(_assertThisInitialized(_this), "fonts", []);
+
+    return _this;
+  }
+
+  return EquationControl;
+}(CommonControl);
+
 var SectionParser = /*#__PURE__*/function () {
   function SectionParser(data) {
     _classCallCheck(this, SectionParser);
@@ -12952,6 +12997,13 @@ var SectionParser = /*#__PURE__*/function () {
         shape.id = ctrlID;
         this.visitCommonControl(reader, shape);
         return shape;
+      }
+
+      if (ctrlID === CommonCtrlID.Equation) {
+        var equation = new EquationControl();
+        equation.id = ctrlID;
+        this.visitCommonControl(reader, equation);
+        return equation;
       }
 
       if (ctrlID === OtherCtrlID.Header) {
@@ -13129,6 +13181,53 @@ var SectionParser = /*#__PURE__*/function () {
       }
     }
   }, {
+    key: "visitEquation",
+    value: function visitEquation(record, control) {
+      var reader = new ByteReader(record.payload);
+
+      if (!control) {
+        throw new Error('Expect control');
+      }
+
+      if (control.id !== CommonCtrlID.Equation) {
+        throw new Error("Expect: ".concat(CommonCtrlID.Table, ", Recived: ").concat(control.id));
+      }
+
+      var attribute = reader.readInt32();
+      control.range = getBitValue(attribute, 0);
+      control.count = reader.readUInt16();
+      var scripts = [];
+
+      for (var i = 0; i < control.count; i += 1) {
+        scripts.push(reader.readUInt16());
+      }
+
+      control.scripts = scripts;
+      control.size = reader.readUInt32();
+      control.color = reader.readUInt32();
+      control.baseline = reader.readUInt16();
+
+      if (reader.remainByte() >= control.count * 16) {
+        var versions = [];
+
+        for (var _i = 0; _i < control.count; _i += 1) {
+          versions.push(reader.readUInt16());
+        }
+
+        control.versions = versions;
+      }
+
+      if (reader.remainByte() >= control.count * 16) {
+        var fonts = [];
+
+        for (var _i2 = 0; _i2 < control.count; _i2 += 1) {
+          fonts.push(reader.readUInt16());
+        }
+
+        control.fonts = fonts;
+      }
+    }
+  }, {
     key: "visit",
     value: function visit(reader, paragraph, control) {
       var record = reader.read();
@@ -13185,6 +13284,12 @@ var SectionParser = /*#__PURE__*/function () {
         case SectionTagID.HWPTAG_PARA_LINE_SEG:
           {
             this.visitLineSegment(record, paragraph);
+            break;
+          }
+
+        case SectionTagID.HWPTAG_EQEDIT:
+          {
+            this.visitEquation(record, control);
             break;
           }
       }
